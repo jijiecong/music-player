@@ -7,7 +7,6 @@
     <div class="dots">
       <span class="dot"
             :class="{active: currentPageIndex === index }" v-for="(item, index) in dots" >
-
       </span>
     </div>
   </div>
