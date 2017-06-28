@@ -1,25 +1,27 @@
 <!-- 这是用vux制作的一套页面 -->
 <template>
   <div>
-    <swiper :list="list" loop auto :show-desc-mask="showDescMask">
-    </swiper>
-    <scroller lock-x height="-268px" ref="scrollerEvent">
-      <div class="recommend-list">
-        <h1 class="list-title">热门歌单推荐</h1>
-        <ul>
-          <li class="item" v-for="item in discList">
-            <div class="icon">
-              <img width="60" height="60" v-lazy="item.imgurl"/>
-            </div>
-            <div class="text">
-              <h2 class="name" v-html="item.creator.name"></h2>
-              <p class="desc" v-html="item.dissname"></p>
-            </div>
-          </li>
-        </ul>
-      </div>
-      <div  class="loading">
-        <loading v-model="show" :text="text"></loading>
+    <scroller lock-x height="-88px" ref="scrollerEvent">
+      <div>
+        <swiper :list="list" :aspect-ratio="300/800" loop auto :show-desc-mask="showDescMask" @on-index-change="onIndexChange">
+        </swiper>
+        <div class="recommend-list">
+          <h1 class="list-title">热门歌单推荐</h1>
+          <ul>
+            <li class="item" v-for="item in discList">
+              <div class="icon">
+                <img width="60" height="60" v-lazy="item.imgurl"/>
+              </div>
+              <div class="text">
+                <h2 class="name" v-html="item.creator.name"></h2>
+                <p class="desc" v-html="item.dissname"></p>
+              </div>
+            </li>
+          </ul>
+        </div>
+        <div  class="loading">
+          <loading v-model="show" :text="text"></loading>
+        </div>
       </div>
     </scroller>
   </div>
@@ -57,6 +59,9 @@
               this.list.push(item)
             }
           }
+          this.$nextTick(() => {
+            this.$refs.scrollerEvent.reset({top: 0})
+          })
         })
       },
       _getDiscList() {
@@ -69,6 +74,8 @@
             this.$refs.scrollerEvent.reset({top: 0})
           })
         })
+      },
+      onIndexChange() {
       }
     },
     components: {

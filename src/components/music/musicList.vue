@@ -3,7 +3,7 @@
     <div class="back" @click="back">
       <i class="icon-back"></i>
     </div>
-    <blur :blur-amount=40 :url="this.avatar" ref="blurEvent">
+    <blur :blur-amount=15 :url="this.avatar" ref="blurEvent" class="blur">
       <p class="center"><img :src="this.avatar"></p>
     </blur>
     <scroller lock-x height="-200px" ref="scrollerEvent" @on-scroll="onScroll">
