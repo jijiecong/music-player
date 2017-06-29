@@ -1,28 +1,21 @@
 <template>
   <div class="singer-detail">
-    <div class="back" @click="back">
-      <i class="icon-back"></i>
-    </div>
-    <blur :blur-amount=15 :url="this.avatar" ref="blurEvent" class="blur">
-      <p class="center"><img :src="this.avatar"></p>
-    </blur>
-    <scroller lock-x height="-200px" ref="scrollerEvent" @on-scroll="onScroll">
-      <div class="music-list">
-        <ul>
-          <li class="item" v-for="item in songs">
-            <div class="text">
-              <h2 class="name" v-html="item.name"></h2>
-              <p class="desc" v-html="_getDesc(item)"></p>
-            </div>
-          </li>
-        </ul>
+    <x-header class="header" :left-options="{backText: ''}"></x-header>
+    <scroller lock-x height="-40px" ref="scrollerEvent" @on-scroll="onScroll">
+      <div>
+        <blur :blur-amount=15 :url="this.avatar" ref="blurEvent" class="blur">
+          <p class="center"><img :src="this.avatar"></p>
+        </blur>
+        <song-list :songs="songs" @select="select"></song-list>
       </div>
     </scroller>
   </div>
 </template>
 
 <script type="text/ecmascript-6">
-  import { Blur, Scroller } from 'vux'
+  import { Blur, Scroller, XHeader } from 'vux'
+  import SongList from 'components/song'
+  import {mapActions} from 'vuex'
 
   export default {
     props: {
@@ -40,6 +33,11 @@
       }
     },
     watch: {
+      avatar() {
+        this.$nextTick(() => {
+          this.$refs.scrollerEvent.reset({top: 0})
+        })
+      },
       songs() {
         this.$nextTick(() => {
           this.$refs.scrollerEvent.reset({top: 0})
@@ -60,11 +58,22 @@
       },
       back() {
         this.$router.back()
-      }
+      },
+      select(item, index) {
+        this.initPlayer({
+          playlist: this.songs,
+          index: index
+        })
+      },
+      ...mapActions([
+        'initPlayer'
+      ])
     },
     components: {
       Blur,
-      Scroller
+      Scroller,
+      XHeader,
+      SongList
     }
   }
 </script>
@@ -80,6 +89,9 @@
     bottom: 0
     left: 0
     background: $color-background
+    .header
+      background-color: $color-background
+      padding: 0 0
     .back
       position absolute
       top: 0
@@ -98,23 +110,5 @@
       height: 80%;
       border-radius: 50%;
     }
-    .music-list
-      .item
-        align-items: center
-        padding: 10px 20px 10px 20px
-        .text
-          display: flex
-          flex-direction: column
-          justify-content: center
-          flex: 1
-          line-height: 20px
-          overflow: hidden
-          font-size: $font-size-medium
-          letter-spacing : 0.5px
-        .name
-          margin-bottom: 5px
-          color: $color-text
-        .desc
-          color: $color-text-d
 
 </style>
