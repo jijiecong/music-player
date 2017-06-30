@@ -1,60 +1,68 @@
 <template>
   <div class="player" v-show="getPlayList.length>0">
-    <div class="full-screen" v-show="getFullScreen">
-      <div class="background">
-        <img width="100%" height="100%" :src="getCurrentSong.image">
-      </div>
-      <div class="top">
-        <div class="back">
-          <x-icon type="ios-arrow-down" size="30" @click="mini"></x-icon>
+    <transition name="normal"
+                @enter="enter"
+                @after-enter="afterEnter"
+                @leave="leave"
+                @after-leave="afterLeave"
+    >
+      <div class="full-screen" v-show="getFullScreen">
+        <div class="background">
+          <img width="100%" height="100%" :src="getCurrentSong.image">
         </div>
-        <h1 class="title" v-html="getCurrentSong.name"></h1>
-        <h2 class="subtitle" v-html="getCurrentSong.singer"></h2>
-      </div>
-      <div class="middle">
-        <div class="middle-l">
-          <div class="cd-wrapper">
-            <div class="cd">
-              <img class="image" :src="getCurrentSong.image">
+        <div class="top">
+          <div class="back">
+            <x-icon type="ios-arrow-down" size="30" @click="mini"></x-icon>
+          </div>
+          <h1 class="title" v-html="getCurrentSong.name"></h1>
+          <h2 class="subtitle" v-html="getCurrentSong.singer"></h2>
+        </div>
+        <div class="middle">
+          <div class="middle-l">
+            <div class="cd-wrapper">
+              <div class="cd" :class="cdCls">
+                <img class="image" :src="getCurrentSong.image">
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="bottom">
+          <div class="operators">
+            <div class="icon i-left">
+              <i class="icon-sequence"></i>
+            </div>
+            <div class="icon i-left" :class="iconDis">
+              <i class="icon-prev" @click="prev"></i>
+            </div>
+            <div class="icon i-center" :class="iconDis">
+              <i :class="iconPlay" @click="togglePlay"></i>
+            </div>
+            <div class="icon i-right" :class="iconDis">
+              <i class="icon-next" @click="next"></i>
+            </div>
+            <div class="icon i-right">
+              <i class="icon icon-not-favorite"></i>
             </div>
           </div>
         </div>
       </div>
-      <div class="bottom">
-        <div class="operators">
-          <div class="icon i-left">
-            <i class="icon-sequence"></i>
-          </div>
-          <div class="icon i-left">
-            <i class="icon-prev"></i>
-          </div>
-          <div class="icon i-center">
-            <i class="icon-play"></i>
-          </div>
-          <div class="icon i-right">
-            <i class="icon-next"></i>
-          </div>
-          <div class="icon i-right">
-            <i class="icon icon-not-favorite"></i>
-          </div>
-        </div>
+    </transition>
+    <div class="mini-screen" v-show="!getFullScreen" >
+      <div class="icon" @click="max" >
+        <img :class="cdCls" width="100%" height="100%" :src="getCurrentSong.image">
       </div>
-    </div>
-
-    <div class="mini-screen" v-show="!getFullScreen" @click="max">
-      <div class="icon">
-        <img width="100%" height="100%" :src="getCurrentSong.image">
-      </div>
-      <div class="text">
+      <div class="text" @click="max">
         <h2 class="name" v-html="getCurrentSong.name"></h2>
         <p class="desc" v-html="getCurrentSong.singer"></p>
       </div>
       <div class="control">
+        <i :class="iconPlayMini" @click="togglePlay"></i>
       </div>
       <div class="control">
         <i class="icon-playlist"></i>
       </div>
     </div>
+    <audio ref="audio" :src="getCurrentSong.url" @play="canPlay" @error="error"></audio>
   </div>
 </template>
 
@@ -62,14 +70,78 @@
   import {mapGetters, mapMutations} from 'vuex'
 
   export default {
+    data() {
+      return {
+        ready: false
+      }
+    },
     computed: {
+      cdCls() {
+        return this.getPlaying ? 'play' : 'play pause'
+      },
+      iconPlay() {
+        return this.getPlaying ? 'icon-pause' : 'icon-play'
+      },
+      iconPlayMini() {
+        return this.getPlaying ? 'icon-pause-mini' : 'icon-play-mini'
+      },
+      iconDis() {
+        return this.ready ? '' : 'disable'
+      },
       ...mapGetters([
         'getPlayList',
         'getFullScreen',
-        'getCurrentSong'
+        'getCurrentSong',
+        'getPlaying',
+        'getCurrentIndex'
       ])
     },
     methods: {
+      prev() {
+        if (!this.ready) {
+          return
+        }
+        this.ready = false
+        let index = this.getCurrentIndex - 1
+        if (index === -1) {
+          index = this.getPlayList.length - 1
+        }
+        this.setCurrentIndex(index)
+        if (!this.getPlaying) {
+          this.togglePlay()
+        }
+      },
+      next() {
+        if (!this.ready) {
+          return
+        }
+        this.ready = false
+        let index = this.getCurrentIndex + 1
+        if (index === this.getPlayList.length) {
+          index = 0
+        }
+        this.setCurrentIndex(index)
+        if (!this.getPlaying) {
+          this.togglePlay()
+        }
+      },
+      canPlay() {
+        this.ready = true
+      },
+      error() {
+        this.ready = true
+      },
+      togglePlay() {
+        this.setPlaying(!this.getPlaying)
+      },
+      enter() {
+      },
+      afterEnter() {
+      },
+      leave() {
+      },
+      afterLeave() {
+      },
       mini() {
         this.setFullScreen(false)
       },
@@ -77,8 +149,23 @@
         this.setFullScreen(true)
       },
       ...mapMutations({
-        setFullScreen: 'SET_FULLSCREEN'
+        setFullScreen: 'SET_FULLSCREEN',
+        setPlaying: 'SET_PLAYING',
+        setCurrentIndex: 'SET_CURRENTINDEX'
       })
+    },
+    watch: {
+      getCurrentSong() {
+        this.$nextTick(() => {
+          this.$refs.audio.play()
+        })
+      },
+      getPlaying(newVal) {
+        this.$nextTick(() => {
+          const audio = this.$refs.audio
+          newVal ? audio.play() : audio.pause()
+        })
+      }
     }
   }
 </script>
@@ -263,14 +350,16 @@
             color: $color-sub-theme
       &.normal-enter-active, &.normal-leave-active
         transition: all 0.4s
-        .top, .bottom
-          transition: all 0.4s cubic-bezier(0.86, 0.18, 0.82, 1.32)
+        .top, .bottom, .cd-wrapper
+          transition: all 0.4s cubic-bezier(0.86, 0.18, 0.82, 1.00)
       &.normal-enter, &.normal-leave-to
         opacity: 0
         .top
           transform: translate3d(0, -100px, 0)
         .bottom
           transform: translate3d(0, 100px, 0)
+        .cd-wrapper
+          transform: translate3d(-100px, 400px, 0)
     .mini-screen
       display: flex
       align-items: center
@@ -319,4 +408,9 @@
           position: absolute
           left: 0
           top: 0
+  @keyframes rotate
+    0%
+      transform: rotate(0)
+    100%
+      transform: rotate(360deg)
 </style>

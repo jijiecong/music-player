@@ -57,9 +57,10 @@ const actions = {
   },
   initPlayer({commit}, data) {
     commit(types.SET_PLAYLIST, data.playlist)
-    commit(types.SET_FULLSCREEN, true)
+    commit(types.SET_FULLSCREEN, data.fullScreen)
     commit(types.SET_SEQUENCELIST, data.playlist)
     commit(types.SET_CURRENTINDEX, data.index)
+    commit(types.SET_PLAYING, true)
   }
 }
 

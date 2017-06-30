@@ -15,7 +15,7 @@
 <script type="text/ecmascript-6">
   import { Blur, Scroller, XHeader } from 'vux'
   import SongList from 'components/song'
-  import {mapActions} from 'vuex'
+  import {mapActions, mapGetters} from 'vuex'
 
   export default {
     props: {
@@ -50,6 +50,9 @@
     },
     created() {
     },
+    computed: {
+      ...mapGetters(['getPlayList'])
+    },
     methods: {
       _getDesc(song) {
         return `${song.singer} - ${song.album}`
@@ -60,9 +63,11 @@
         this.$router.back()
       },
       select(item, index) {
+        let fullScreen = !(this.getPlayList.length > 0)
         this.initPlayer({
           playlist: this.songs,
-          index: index
+          index: index,
+          fullScreen: fullScreen
         })
       },
       ...mapActions([
