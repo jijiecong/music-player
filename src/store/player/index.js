@@ -2,7 +2,9 @@
  * Created by Jiecong Ji on 2017/6/29.
  */
 import * as types from '../types'
-import {playMode} from './config'
+import { playMode } from './config'
+import { randomList, findIndex } from 'common/js/utils'
+
 const state = {
   mode: playMode.sequence,
   playing: false,
@@ -55,30 +57,46 @@ const actions = {
   setCurrentIndex({commit}, data) {
     commit(types.SET_CURRENTINDEX, data)
   },
-  initPlayer({commit}, data) {
-    commit(types.SET_PLAYLIST, data.playlist)
+  initPlayer({commit, state}, data) {
+    if (state.mode === playMode.random) {
+      let randomlist = randomList(data.playlist)
+      let index = findIndex(randomlist, data.playlist[data.index])
+      commit(types.SET_CURRENTINDEX, index)
+      commit(types.SET_PLAYLIST, randomlist)
+    } else {
+      commit(types.SET_CURRENTINDEX, data.index)
+      commit(types.SET_PLAYLIST, data.playlist)
+    }
     commit(types.SET_FULLSCREEN, data.fullScreen)
     commit(types.SET_SEQUENCELIST, data.playlist)
-    commit(types.SET_CURRENTINDEX, data.index)
+    commit(types.SET_PLAYING, true)
+  },
+  randomPlayer({commit}, data) {
+    commit(types.SET_MODE, playMode.random)
+    let playlist = randomList(data.playlist)
+    commit(types.SET_PLAYLIST, playlist)
+    commit(types.SET_FULLSCREEN, data.fullScreen)
+    commit(types.SET_SEQUENCELIST, data.playlist)
+    commit(types.SET_CURRENTINDEX, 0)
     commit(types.SET_PLAYING, true)
   }
 }
 
 const mutations = {
   [types.SET_MODE](state, data) {
-    state.mode = data || null
+    state.mode = data
   },
   [types.SET_PLAYING](state, data) {
-    state.playing = data || null
+    state.playing = data
   },
   [types.SET_FULLSCREEN](state, data) {
-    state.fullScreen = data || null
+    state.fullScreen = data
   },
   [types.SET_PLAYLIST](state, data) {
-    state.playList = data || null
+    state.playList = data
   },
   [types.SET_SEQUENCELIST](state, data) {
-    state.sequenceList = data || null
+    state.sequenceList = data
   },
   [types.SET_CURRENTINDEX](state, data) {
     state.currentIndex = data

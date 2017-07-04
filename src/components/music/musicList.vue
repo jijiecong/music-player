@@ -5,6 +5,12 @@
       <div>
         <blur :blur-amount=15 :url="this.avatar" ref="blurEvent" class="blur">
           <p class="center"><img :src="this.avatar"></p>
+          <div class="play-wrapper">
+            <div v-show="songs.length>0" class="play" @click="random">
+              <i class="icon-play"></i>
+              <span class="text">随机播放全部</span>
+            </div>
+          </div>
         </blur>
         <song-list :songs="songs" @select="select"></song-list>
       </div>
@@ -54,6 +60,13 @@
       ...mapGetters(['getPlayList'])
     },
     methods: {
+      random() {
+        let fullScreen = !(this.getPlayList.length > 0)
+        this.randomPlayer({
+          playlist: this.songs,
+          fullScreen: fullScreen
+        })
+      },
       _getDesc(song) {
         return `${song.singer} - ${song.album}`
       },
@@ -71,7 +84,8 @@
         })
       },
       ...mapActions([
-        'initPlayer'
+        'initPlayer',
+        'randomPlayer'
       ])
     },
     components: {
@@ -109,11 +123,34 @@
         color: $color-text
     .center {
       text-align: center;
-      padding-top: 30px;
+      padding-top: 10px;
     }
     .center img {
       height: 80%;
       border-radius: 50%;
     }
-
+    .play-wrapper
+      position: absolute
+      bottom: 10px
+      z-index: 50
+      width: 100%
+      .play
+        box-sizing: border-box
+        width: 135px
+        padding: 4px 0
+        margin: 0 auto
+        text-align: center
+        border: 1px solid $color-theme
+        color: $color-theme
+        border-radius: 100px
+        font-size: 0
+        .icon-play
+          display: inline-block
+          vertical-align: middle
+          margin-right: 6px
+          font-size: $font-size-medium-x
+        .text
+          display: inline-block
+          vertical-align: middle
+          font-size: $font-size-small
 </style>

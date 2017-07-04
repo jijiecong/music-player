@@ -24,12 +24,26 @@
                 <img class="image" :src="getCurrentSong.image">
               </div>
             </div>
+            <div class="playing-lyric-wrapper">
+              <div class="playing-lyric">
+                {{playingLyric}}
+
+
+              </div>
+            </div>
           </div>
         </div>
         <div class="bottom">
+          <div class="progress-wrapper">
+            <span class="time time-l">{{this.formatTime(currentTime)}}</span>
+            <div class="progress-bar-wrapper">
+              <x-progress :percent="percent"></x-progress>
+            </div>
+            <span class="time time-r">{{this.formatTime(getCurrentSong.duration)}}</span>
+          </div>
           <div class="operators">
             <div class="icon i-left">
-              <i class="icon-sequence"></i>
+              <i :class="mode" @click="setPlayMode"></i>
             </div>
             <div class="icon i-left" :class="iconDis">
               <i class="icon-prev" @click="prev"></i>
@@ -47,35 +61,53 @@
         </div>
       </div>
     </transition>
-    <div class="mini-screen" v-show="!getFullScreen" >
-      <div class="icon" @click="max" >
-        <img :class="cdCls" width="100%" height="100%" :src="getCurrentSong.image">
+    <div class="mini-screen" v-show="!getFullScreen">
+      <div class="icon" @click="max">
+        <img :class="cdCls" width="100%" height="100%"
+             :src="getCurrentSong.image">
       </div>
       <div class="text" @click="max">
         <h2 class="name" v-html="getCurrentSong.name"></h2>
         <p class="desc" v-html="getCurrentSong.singer"></p>
       </div>
       <div class="control">
-        <i :class="iconPlayMini" @click="togglePlay"></i>
+        <x-circle :percent="percent" :stroke-width="8" stroke-color="#ffcd32">
+          <i :class="iconPlayMini" @click="togglePlay"></i>
+        </x-circle>
       </div>
       <div class="control">
         <i class="icon-playlist"></i>
       </div>
     </div>
-    <audio ref="audio" :src="getCurrentSong.url" @play="canPlay" @error="error"></audio>
+    <audio ref="audio" :src="getCurrentSong.url" @play="canPlay" @error="error"
+           @timeupdate="updateTime" @ended="end"></audio>
   </div>
 </template>
 
 <script type="text/ecmascript-6">
-  import {mapGetters, mapMutations} from 'vuex'
+  import { mapGetters, mapMutations } from 'vuex'
+  import progressBar from 'base/progress-bar'
+  import { XProgress, XCircle } from 'vux'
+  import { playMode } from 'store/player/config'
+  import { randomList } from 'common/js/utils'
+  import Lyric from 'lyric-parser'
 
   export default {
     data() {
       return {
-        ready: false
+        ready: false,
+        currentTime: 0,
+        currentLyric: null,
+        playingLyric: ''
       }
     },
     computed: {
+      mode() {
+        return this.getMode === playMode.sequence ? 'icon-sequence' : this.getMode === playMode.random ? 'icon-random' : 'icon-loop'
+      },
+      percent() {
+        return this.currentTime / this.getCurrentSong.duration * 100
+      },
       cdCls() {
         return this.getPlaying ? 'play' : 'play pause'
       },
@@ -93,15 +125,71 @@
         'getFullScreen',
         'getCurrentSong',
         'getPlaying',
-        'getCurrentIndex'
+        'getCurrentIndex',
+        'getMode',
+        'getSequenceList'
       ])
     },
     methods: {
+      handleLyric({lineNum, txt}) {
+        this.playingLyric = txt
+      },
+      getLyric() {
+        this.getCurrentSong.getLyric().then((lyric) => {
+          this.currentLyric = new Lyric(lyric, this.handleLyric)
+          if (this.getPlaying) {
+            this.currentLyric.play()
+          }
+        }).catch(() => {
+          this.currentLyric = null
+          this.playingLyric = ''
+        })
+      },
+      end() {
+        if (this.getMode === playMode.loop) {
+          this.$refs.audio.currentTime = 0
+          this.$refs.audio.play()
+        } else {
+          this.next()
+        }
+      },
+      setPlayMode() {
+        const mode = (this.getMode + 1) % 3
+        this.setMode(mode)
+        let list = null
+        if (mode === playMode.random) {
+          list = randomList(this.getSequenceList)
+        } else {
+          list = this.getSequenceList
+        }
+        this.resetCurrentIndex(list)
+        this.setPlayList(list)
+      },
+      resetCurrentIndex(list) {
+        let index = list.findIndex((item) => {
+          return item.id === this.getCurrentSong.id
+        })
+        this.setCurrentIndex(index)
+      },
+      formatTime(interval) {
+        interval = interval | 0
+        const min = interval / 60 | 0
+        let secFormat = interval % 60
+        let len = secFormat.toString().length
+        while (len < 2) {
+          secFormat = '0' + secFormat
+          len++
+        }
+        const sec = secFormat
+        return `${min}:${sec}`
+      },
+      updateTime(e) {
+        this.currentTime = e.target.currentTime
+      },
       prev() {
         if (!this.ready) {
           return
         }
-        this.ready = false
         let index = this.getCurrentIndex - 1
         if (index === -1) {
           index = this.getPlayList.length - 1
@@ -110,12 +198,12 @@
         if (!this.getPlaying) {
           this.togglePlay()
         }
+        this.ready = false
       },
       next() {
         if (!this.ready) {
           return
         }
-        this.ready = false
         let index = this.getCurrentIndex + 1
         if (index === this.getPlayList.length) {
           index = 0
@@ -124,6 +212,7 @@
         if (!this.getPlaying) {
           this.togglePlay()
         }
+        this.ready = false
       },
       canPlay() {
         this.ready = true
@@ -132,7 +221,13 @@
         this.ready = true
       },
       togglePlay() {
+        if (!this.ready) {
+          return
+        }
         this.setPlaying(!this.getPlaying)
+        if (this.currentLyric) {
+          this.currentLyric.togglePlay()
+        }
       },
       enter() {
       },
@@ -151,13 +246,24 @@
       ...mapMutations({
         setFullScreen: 'SET_FULLSCREEN',
         setPlaying: 'SET_PLAYING',
-        setCurrentIndex: 'SET_CURRENTINDEX'
+        setCurrentIndex: 'SET_CURRENTINDEX',
+        setMode: 'SET_MODE',
+        setPlayList: 'SET_PLAYLIST'
       })
     },
     watch: {
-      getCurrentSong() {
+      getCurrentSong(newSong, oldSong) {
+        if (newSong.id === oldSong.id) {
+          return
+        }
+        if (this.currentLyric) {
+          this.currentLyric.stop()
+          this.playingLyric = ''
+        }
         this.$nextTick(() => {
           this.$refs.audio.play()
+          this.$refs.audio.volume = 0.2
+          this.getLyric()
         })
       },
       getPlaying(newVal) {
@@ -166,6 +272,11 @@
           newVal ? audio.play() : audio.pause()
         })
       }
+    },
+    components: {
+      progressBar,
+      XProgress,
+      XCircle
     }
   }
 </script>
@@ -177,11 +288,11 @@
   .player
     .full-screen
       position: fixed
-      left:0
-      right:0
-      top:0
-      bottom:0
-      z-index:150
+      left: 0
+      right: 0
+      top: 0
+      bottom: 0
+      z-index: 150
       background: $color-background
       .background
         positon: absolute
@@ -197,6 +308,7 @@
         top: 0
         left: 0
         right: 0
+        letter-spacing: 2px
         .back
           position: absolute
           top: 10px
@@ -313,7 +425,7 @@
           display: flex
           align-items: center
           width: 80%
-          margin: 0px auto
+          margin: 0 auto
           padding: 10px 0
           .time
             color: $color-text
@@ -408,6 +520,7 @@
           position: absolute
           left: 0
           top: 0
+
   @keyframes rotate
     0%
       transform: rotate(0)
