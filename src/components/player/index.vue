@@ -27,8 +27,6 @@
             <div class="playing-lyric-wrapper">
               <div class="playing-lyric">
                 {{playingLyric}}
-
-
               </div>
             </div>
           </div>

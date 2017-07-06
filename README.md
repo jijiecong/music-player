@@ -2,6 +2,9 @@
 
 > music player
 
+## Demo
+[website](http://jijiecong.github.io)
+
 ## Build Setup
 
 ``` bash
