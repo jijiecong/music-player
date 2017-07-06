@@ -3,7 +3,7 @@
 > music player
 
 ## Demo
-[website](http://jijiecong.github.io)
+[player](http://jijiecong.github.io)
 
 ## Build Setup
 
