@@ -122,6 +122,8 @@
         font-size: $font-size-large-x
         color: $color-text
     .center {
+      height: 160px;
+      width: 320px;
       text-align: center;
       padding-top: 10px;
     }

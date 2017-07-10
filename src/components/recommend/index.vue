@@ -6,7 +6,7 @@
           <slider>
             <div v-for="item in recommends">
               <a :href="item.linkUrl">
-                <img :src="item.picUrl" />
+                <img :src="item.picUrl"/>
               </a>
             </div>
           </slider>
@@ -15,18 +15,21 @@
           <h1 class="list-title">热门歌单推荐</h1>
           <ul>
             <li class="item" v-for="item in discList">
-              <div class="icon">
-                <img width="60" height="60" :src="item.imgurl"/>
-              </div>
-              <div class="text">
-                <h2 class="name" v-html="item.creator.name"></h2>
-                <p class="desc" v-html="item.dissname"></p>
-              </div>
+              <a @click="click2(item)">
+                <div class="icon">
+                  <img width="60" height="60" :src="item.imgurl" />
+                </div>
+                <div class="text">
+                  <h2 class="name" v-html="item.creator.name"></h2>
+                  <p class="desc" v-html="item.dissname"></p>
+                </div>
+              </a>
             </li>
           </ul>
         </div>
       </div>
     </scroll>
+    <router-view></router-view>
   </div>
 </template>
 
@@ -35,6 +38,7 @@
   import Scroll from 'base/scroll'
   import { getRecommend, getDiscList } from 'api/recommend'
   import { ERR_OK } from 'api/config'
+  import { mapMutations } from 'vuex'
 
   export default{
     data() {
@@ -49,6 +53,14 @@
       this._getDiscList()
     },
     methods: {
+      click2(item) {
+        console.log(133)
+      },
+      to_router(router, disc) {
+        console.log(1111)
+        this.$router.push({path: router + '/' + disc.id})
+        this.setDisc(disc)
+      },
       _getRecommend() {
         getRecommend().then((res) => {
           if (res.code === ERR_OK) {
@@ -62,7 +74,10 @@
             this.discList = res.data.list
           }
         })
-      }
+      },
+      ...mapMutations({
+        setDisc: 'SET_DISC'
+      })
     },
     components: {
       Slider,

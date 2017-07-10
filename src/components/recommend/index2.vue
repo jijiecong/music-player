@@ -8,7 +8,7 @@
         <div class="recommend-list">
           <h1 class="list-title">热门歌单推荐</h1>
           <ul>
-            <li class="item" v-for="item in discList">
+            <li class="item" v-for="item in discList" @click="to_router('/recommend', item)">
               <div class="icon">
                 <img width="60" height="60" v-lazy="item.imgurl"/>
               </div>
@@ -24,6 +24,7 @@
         </div>
       </div>
     </scroller>
+    <router-view></router-view>
   </div>
 </template>
 
@@ -32,6 +33,7 @@
   import { Swiper, Scroller, Loading } from 'vux'
   import { getRecommend, getDiscList } from 'api/recommend'
   import { ERR_OK } from 'api/config'
+  import { mapMutations } from 'vuex'
 
   export default {
     data() {
@@ -48,6 +50,10 @@
       this._getDiscList()
     },
     methods: {
+      to_router(router, disc) {
+        this.$router.push({path: router + '/' + disc.dissid})
+        this.setDisc(disc)
+      },
       _getRecommend() {
         getRecommend().then((res) => {
           if (res.code === ERR_OK) {
@@ -76,7 +82,10 @@
         })
       },
       onIndexChange() {
-      }
+      },
+      ...mapMutations({
+        setDisc: 'SET_DISC'
+      })
     },
     components: {
       Swiper,
