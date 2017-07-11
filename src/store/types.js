@@ -8,3 +8,5 @@ export const SET_SEQUENCELIST = 'SET_SEQUENCELIST'
 export const SET_CURRENTINDEX = 'SET_CURRENTINDEX'
 
 export const SET_DISC = 'SET_DISC'
+
+export const SET_RANK = 'SET_RANK'

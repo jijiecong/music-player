@@ -1,11 +1,8 @@
-/**
- * Created by Jiecong Ji on 2017/6/27.
- */
 import jsonp from 'common/js/jsonp'
 import { commonParams, options } from './config'
 
-export function getTopList () {
-  const url = 'https://c.y.qq.com/v8/fcg-bin/fcg_myqq_toplist.fcg'
+export function getHotKey () {
+  const url = 'https://c.y.qq.com/splcloud/fcgi-bin/gethotkey.fcg'
 
   const data = Object.assign({}, commonParams, {
     g_tk: 792116527,
@@ -18,8 +15,8 @@ export function getTopList () {
   return jsonp(url, data, options)
 }
 
-export function getTopDetail (topid) {
-  const url = 'https://c.y.qq.com/v8/fcg-bin/fcg_v8_toplist_cp.fcg'
+export function searchByHotKey (key) {
+  const url = 'https://c.y.qq.com/soso/fcgi-bin/search_for_qq_cp'
 
   const data = Object.assign({}, commonParams, {
     g_tk: 792116527,
@@ -27,10 +24,18 @@ export function getTopDetail (topid) {
     notice: 0,
     platform: 'h5',
     needNewCode: 1,
-    tpl: 3,
-    page: 'detail',
-    type: 'top',
-    topid
+    w: key,
+    zhidaqu: 1,
+    catZhida: 1,
+    t: 0,
+    flag: 1,
+    ie: 'utf-8',
+    sem: 1,
+    aggr: 0,
+    perpage: 20,
+    n: 20,
+    p: 1,
+    remoteplace: 'txt.mqq.all'
   })
 
   return jsonp(url, data, options)

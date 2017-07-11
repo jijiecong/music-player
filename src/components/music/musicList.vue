@@ -12,14 +12,17 @@
             </div>
           </div>
         </blur>
-        <song-list :songs="songs" @select="select"></song-list>
+        <song-list :rank="rank" :songs="songs" @select="select"></song-list>
       </div>
     </scroller>
+    <div>
+      <loading v-model="show" :text="text"></loading>
+    </div>
   </div>
 </template>
 
 <script type="text/ecmascript-6">
-  import { Blur, Scroller, XHeader } from 'vux'
+  import { Blur, Scroller, XHeader, Loading } from 'vux'
   import SongList from 'components/song'
   import {mapActions, mapGetters} from 'vuex'
 
@@ -36,6 +39,10 @@
       avatar: {
         type: String,
         default: ''
+      },
+      rank: {
+        type: Boolean,
+        default: false
       }
     },
     watch: {
@@ -44,7 +51,8 @@
           this.$refs.scrollerEvent.reset({top: 0})
         })
       },
-      songs() {
+      songs(newVal) {
+        this.show = newVal.length === 0
         this.$nextTick(() => {
           this.$refs.scrollerEvent.reset({top: 0})
         })
@@ -52,6 +60,8 @@
     },
     data() {
       return {
+        text: '加载中...',
+        show: true
       }
     },
     created() {
@@ -92,7 +102,8 @@
       Blur,
       Scroller,
       XHeader,
-      SongList
+      SongList,
+      Loading
     }
   }
 </script>
