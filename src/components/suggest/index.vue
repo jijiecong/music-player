@@ -51,7 +51,7 @@
     methods: {
       select(item) {
         if (item.type === TYPE_SINGER) {
-          this.$router.push({path: '/search' + '/' + item.singerid})
+          this.$router.push({path: '/search' + '/' + item.singermid})
           let singer = {
             id: item.singermid,
             name: item.singername,
