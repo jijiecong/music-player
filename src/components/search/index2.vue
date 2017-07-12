@@ -1,18 +1,9 @@
 <template>
   <div class="search">
-    <search
-      :placeholder="placeholder"
-      @on-result-click="resultClick"
-      @on-change="onChange"
-      :results="results"
-      v-model="query"
-      position="absolute"
-      auto-scroll-to-top top="88px"
-      @on-focus="onFocus"
-      @on-cancel="onCancel"
-      @on-submit="onSubmit"
-      ref="search"></search>
-    <div class="shortcut-wrapper">
+    <div class="search-box-wrapper">
+      <search-box :placeholder="placeholder" ref="searchBox" @onChangeQuery="onChangeQuery"></search-box>
+    </div>
+    <div class="shortcut-wrapper" v-show="!queryKey">
       <div class="shortcut">
         <div class="hot-key">
           <h1 class="title">热门搜索</h1>
@@ -25,20 +16,25 @@
         </div>
       </div>
     </div>
+    <div class="search-result" v-show="queryKey">
+      <suggest :queryKey="queryKey" :page="page" :catZhida="catZhida"></suggest>
+    </div>
+    <router-view></router-view>
   </div>
 </template>
 
 <script type="text/ecmascript-6">
-  import { Search } from 'vux'
-  import { getHotKey, searchByHotKey } from 'api/search'
+  import SearchBox from 'base/search-box'
+  import Suggest from 'components/suggest'
+  import { getHotKey } from 'api/search'
   import { ERR_OK } from 'api/config'
   export default {
     data() {
       return {
-        cancelText: null,
-        query: '',
         hotKey: [],
-        results: []
+        queryKey: '',
+        page: 1,
+        catZhida: true
       }
     },
     props: {
@@ -48,8 +44,11 @@
       }
     },
     methods: {
-      setQuery(k) {
-        this.query = k
+      onChangeQuery(newVal) {
+        this.queryKey = newVal
+      },
+      setQuery(queryKey) {
+        this.$refs.searchBox.setQueryKey(queryKey)
       },
       _getHotKey() {
         getHotKey().then((res) => {
@@ -57,42 +56,11 @@
             this.hotKey = res.data.hotkey.slice(0, 10)
           }
         })
-      },
-      onChange() {
-        if (this.query === '') {
-          return
-        }
-        searchByHotKey(this.query).then((res) => {
-          if (res.code === ERR_OK) {
-            this.results = this._normalizeResult(res.data.song.list)
-            this.$refs.search.setFocus()
-          }
-        })
-      },
-      _normalizeResult(list) {
-        let ret = []
-        list.forEach((item) => {
-          if (item.songid && item.albummid) {
-            ret.push({
-              title: `${item.songname} ${item.singer[0].name}`,
-              id: `${item.songid}`
-            })
-          }
-        })
-        return ret
-      },
-      resultClick(item) {
-        console.log(item)
-      },
-      onFocus() {},
-      onCancel() {
-        this.quert = ''
-        this.results = []
-      },
-      onSubmit() {}
+      }
     },
     components: {
-      Search
+      SearchBox,
+      Suggest
     },
     created() {
       this._getHotKey()
@@ -104,10 +72,11 @@
   @import "~common/stylus/variable"
 
   .search
-    color: #222
+    .search-box-wrapper
+      margin: 20px
     .shortcut-wrapper
       position: fixed
-      top: 148px
+      top: 178px
       bottom: 0
       width: 100%
       .shortcut
@@ -127,5 +96,9 @@
             background: $color-highlight-background
             font-size: $font-size-medium
             color: $color-text-d
-
+    .search-result
+      position: fixed
+      width: 100%
+      top: 178px
+      bottom: 0
 </style>

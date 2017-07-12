@@ -3,7 +3,7 @@ import Router from 'vue-router'
 import Recommend from 'components/recommend/index2'
 import Singer from 'components/singer'
 import Rank from 'components/rank'
-import Search from 'components/search'
+import Search from 'components/search/index2'
 import SingerDetail from 'components/singer/detail'
 import RecommendDetail from 'components/recommend/detail'
 import RankDetail from 'components/rank/detail'
@@ -53,7 +53,14 @@ export default new Router({
     {
       path: '/search',
       name: 'search',
-      component: Search
+      component: Search,
+      children: [
+        {
+          path: ':id',
+          name: 'singerDetail',
+          component: SingerDetail
+        }
+      ]
     }
   ]
 })
